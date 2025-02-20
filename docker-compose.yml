@@ -1,0 +1,33 @@
+services:
+app:
+  build:
+  context: . # Use the current directory as the build context
+  dockerfile: Dockerfile # Specify the Dockerfile to use
+ports:
+- "3000:3000" # Map port 3000 on the host to port 3000 in the container
+depends_on:
+- db # Ensure the database is running before the app starts
+environment:
+  DATABASE_URL: "postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}"
+# Replace your_strong_password with the actual password
+  restart: always
+ 
+
+db:
+  image: postgres:latest # Use the latest PostgreSQL image
+  ports:
+  - "5432:5432" # Map port 5432 on the host to port 5432 in the container
+  environment:
+  POSTGRES_USER: ${POSTGRES_USER} # Default postgres user
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_DB: ${POSTGRES_DB} # Database name
+  PGDATA: /var/lib/postgresql/data # Data directory
+  restart: always
+  entrypoint: ["/docker-entrypoint.sh"] # Use the custom entrypoint
+  volumes:
+  - db_data:/var/lib/postgresql/data # Persist data across container restarts
+  - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Initialize the database
+  - ./docker-entrypoint.sh:/docker-entrypoint.sh:ro
+
+volumes:
+db_data: # Named volume for persistent database storage
